@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SATE - Sistema de Avaliação</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="login-screen" class="screen active">
+        <div class="login-card">
+            <div style="font-size: 3rem; color: #2c4a8c; margin-bottom: 10px;">🎓</div>
+            <h2>Acesso do Estudante</h2>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="input-group">
+                    <label for="user">CPF</label>
+                    <input type="text" id="user" placeholder="000.000.000-00" required>
+                </div>
+                <div class="input-group">
+                    <label for="pass">Senha</label>
+                    <input type="password" id="pass" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-primary">ENTRAR</button>
+            </form>
+
+            <div class="toggle-link" onclick="goToScreen('register-screen')">Primeiro acesso? <b>Cadastre-se aqui.</b></div>
+        </div>
+    </div>
+
+    <div id="register-screen" class="screen">
+        <div class="login-card">
+            <h2 style="margin-bottom: 1rem;">Novo Cadastro</h2>
+            
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                
+                <div class="input-group">
+                    <label for="reg-nome">Nome Completo</label>
+                    <input type="text" id="reg-nome" placeholder="Ex: João da Silva" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="reg-cpf">CPF</label>
+                    <input type="text" id="reg-cpf" placeholder="000.000.000-00" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="reg-email">E-mail</label>
+                    <input type="email" id="reg-email" placeholder="nome@exemplo.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="reg-inst">Instituição de Ensino</label>
+                    <select id="reg-inst" required>
+                        <option value="" disabled selected>Selecione sua instituição</option>
+                        <option value="senai">SENAI - Serviço Nacional de Aprendizagem Industrial</option>
+                        <option value="sesi">SESI - Serviço Social da Indústria</option>
+                        <option value="if">IF - Instituto Federal</option>
+                        <option value="etec">ETEC / FATEC</option>
+                        <option value="publica">Escola Pública Estadual</option>
+                        <option value="particular">Escola Particular</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="reg-pass">Senha</label>
+                    <input type="password" id="reg-pass" placeholder="Crie uma senha segura" required>
+                </div>
+
+                <button type="submit" class="btn-primary">CONCLUIR CADASTRO</button>
+                <button type="button" class="btn-secondary" onclick="goToScreen('login-screen')">Voltar ao Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="selection-screen" class="screen">
+        <div class="nav-top">
+            <span style="font-weight: bold;">SATE: Sistema de Aplicação de Testes Eletrônicos</span>
+            <button onclick="goToScreen('login-screen')" style="background:none; border:none; color:white; cursor:pointer;">Sair ✕</button>
+        </div>
+        
+        <div style="padding: 2rem; text-align: center;">
+            <h2 style="color: #333;">Avaliações Disponíveis</h2>
+            <p style="color: #666;">Selecione abaixo a prova agendada para hoje.</p>
+        </div>
+        
+        <div class="exam-grid">
+            <div class="exam-card">
+                <div class="exam-card-body">
+                    <h3>Desenvolvimento de Sistemas</h3>
+                    <p>Avaliação de Desempenho 2026 - 2ª Etapa</p>
+                    <p>📅 05/02/2026</p>
+                    <p>⏱️ Duração: 2h 00min</p>
+                    <br>
+                    <button class="btn-primary" onclick="goToScreen('exam-screen')">INICIAR PROVA</button>
+                </div>
+            </div>
+            <div class="exam-card" style="opacity: 0.7;">
+                <div class="exam-card-body">
+                    <h3 style="color: #666;">Banco de Dados</h3>
+                    <p>Avaliação Final - Módulo 1</p>
+                    <p>📅 10/02/2026</p>
+                    <p>🔒 Bloqueado</p>
+                    <br>
+                    <button class="btn-primary" style="background-color: #999; cursor: not-allowed;" disabled>AGUARDANDO DATA</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="exam-screen" class="screen">
+        <div class="exam-header">
+            <div class="header-left">
+                <span style="color:#ff9f1c;">C</span><span style="color:#1a2b56;">ebraspe</span>
+            </div>
+            <div class="header-center">
+                <strong>Avaliação de Desempenho de Estudante 2026 - 2ª Etapa</strong>
+                
+                <span class="user-info" id="header-user-data">
+                    Carregando... | Estudante | <a href="#" onclick="goToScreen('selection-screen')" style="color:#555;">Sair</a>
+                </span>
+
+            </div>
+            <div class="header-right-text">SENAI</div>
+        </div>
+
+        <div class="question-title-bar">Questão 1 - Desenvolvimento de Sistemas</div>
+
+        <div class="exam-container">
+            <div class="sidebar">
+                <div class="timer-box">
+                    <span class="timer-label">Restam:</span>
+                    <span class="timer-value">1 h 59 min</span>
+                </div>
+                <div class="sidebar-content">
+                    <div class="sidebar-title">Resumo da Prova</div>
+                    <div class="legend">
+                        <div class="legend-item"><span class="dot blue"></span> Respondidas</div>
+                        <div class="legend-item"><span class="dot white"></span> Em branco</div>
+                    </div>
+                    <div class="questions-grid" id="qGrid"></div>
+                </div>
+            </div>
+
+            <div class="question-area">
+                <p class="q-enunciado">
+                    Os vetores são estruturas de dados que comportam o armazenamento de "n" valores do mesmo tipo de dado de forma sequencial.
+                    A figura a seguir exibe o código construído pela aluna, onde o vetor "valores", declarado na linha 1, possui 10 posições, e a estrutura de repetição implementada nas linhas 3, 4 e 5 modifica os valores do vetor.
+                </p>
+                <div class="code-container">
+                    <span class="code-line"><span class="line-num">1</span><span class="kw-type">int</span>[] valores = <span class="kw-flow">new</span> <span class="kw-type">int</span>[10];</span>
+                    <span class="code-line"><span class="line-num">2</span></span>
+                    <span class="code-line"><span class="line-num">3</span><span class="kw-flow">for</span>(<span class="kw-type">int</span> i=0; i<=10; i++) {</span>
+                    <span class="code-line"><span class="line-num">4</span>    valores[i] = i*2;</span>
+                    <span class="code-line"><span class="line-num">5</span>}</span>
+                </div>
+                <p class="q-enunciado">Observando o esquema, a aluna identificará nesse código, quando realizar um teste de mesa, que:</p>
+
+                <div class="options-container">
+                    <label class="option-row">
+                        <input type="radio" name="q2"><span class="custom-radio">a</span>
+                        <span class="option-text">o vetor "valores" ficará preenchido com os valores da variável "i" elevados ao valor 2.</span>
+                    </label>
+                    <label class="option-row">
+                        <input type="radio" name="q2"><span class="custom-radio">b</span>
+                        <span class="option-text">o vetor "valores" ficará preenchido com os valores do resto da divisão da variável "i" por 2.</span>
+                    </label>
+                    <label class="option-row">
+                        <input type="radio" name="q2"><span class="custom-radio">c</span>
+                        <span class="option-text">ocorrerá um erro de execução quando o valor da variável "i" for 10, pois essa posição não existe no vetor.</span>
+                    </label>
+                    <label class="option-row">
+                        <input type="radio" name="q2"><span class="custom-radio">d</span>
+                        <span class="option-text">ocorrerá um erro de execução, pois a declaração do vetor é local e não pode ser visualizada pelo "for".</span>
+                    </label>
+                </div>
+
+                <div class="footer-actions">
+                    <button class="btn-black">Apagar resposta</button>
+                    <div style="flex:1;"></div>
+                    <button class="btn-black">Finalizar prova</button>
+                    <button class="btn-black">?</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Objeto global para guardar quem está logado
+        let currentUser = {
+            name: "Estudante",
+            cpf: "000.000.000-00"
+        };
+
+        // Função de navegação
+        function goToScreen(screenId) {
+            // Esconde todas as telas
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            // Mostra a tela desejada
+            document.getElementById(screenId).classList.add('active');
+            
+            // Se entrou na prova, atualiza o cabeçalho com os dados
+            if(screenId === 'exam-screen') {
+                updateExamHeader();
+            }
+        }
+
+        // 1. Função de LOGIN (Simulado)
+        function handleLogin(event) {
+            event.preventDefault();
+            const cpfInput = document.getElementById('user').value;
+            
+            // Como no login simples não tem nome, usamos um nome fixo para exemplo
+            currentUser.cpf = cpfInput;
+            currentUser.name = "Kauan Duarte Flauzino"; 
+            
+            goToScreen('selection-screen');
+        }
+
+        // 2. Função de CADASTRO (Pega dados reais)
+        function handleRegister(event) {
+            event.preventDefault();
+            
+            const nomeInput = document.getElementById('reg-nome').value;
+            const cpfInput = document.getElementById('reg-cpf').value;
+            // (Você pode pegar os outros campos aqui se quiser salvar em banco de dados depois)
+            
+            // Salva na memória
+            currentUser.name = nomeInput;
+            currentUser.cpf = cpfInput;
+            
+            alert('Cadastro realizado com sucesso, ' + nomeInput + '!');
+            goToScreen('selection-screen');
+        }
+
+        // Auxiliar: Mascarar CPF (123.***.***-**)
+        function getCensoredCpf(rawCpf) {
+            // Remove caracteres não numéricos para tratar
+            const cleanCpf = rawCpf.replace(/\D/g, '');
+            
+            if (cleanCpf.length < 3) return rawCpf; // Retorna original se for muito curto
+
+            const firstPart = cleanCpf.substring(0, 3);
+            return `${firstPart}.***.***-**`;
+        }
+
+        // 3. Atualiza o Header da Prova
+        function updateExamHeader() {
+            const displayCpf = getCensoredCpf(currentUser.cpf);
+            const headerSpan = document.getElementById('header-user-data');
+            
+            // Injeta o HTML com Nome e CPF censurado
+            headerSpan.innerHTML = `${currentUser.name} (${displayCpf}) | Estudante | <a href="#" onclick="goToScreen('selection-screen')" style="color:#555;">Sair</a>`;
+        }
+
+        // Gera as bolinhas da lateral
+        document.addEventListener("DOMContentLoaded", () => {
+            const grid = document.getElementById('qGrid');
+            const totalQuestions = 40;
+            const currentQuestion = 1; 
+
+            for (let i = 1; i <= totalQuestions; i++) {
+                const div = document.createElement('div');
+                div.classList.add('q-circle');
+                div.innerText = i;
+                if (i === 1) div.classList.add('answered');
+                else if (i === currentQuestion) div.classList.add('active');
+                grid.appendChild(div);
+            }
+        });
+    </script>
+</body>
+</html>
