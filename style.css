@@ -545,3 +545,37 @@ select {
     display: flex;
     gap: 10px;
 }
+/* --- NOVAS CLASSES PARA O SISTEMA DE REVISÃO --- */
+
+/* Bolinha da sidebar quando marcada para revisão */
+.q-circle.review {
+    background-color: #f1c40f; /* Amarelo */
+    color: #fff;
+    border-color: #f39c12;
+}
+
+/* Botão de marcar para revisão */
+.btn-review {
+    background-color: #f1c40f;
+    color: white;
+    border: none;
+    margin-right: 10px;
+    border-radius: 15px;
+}
+.btn-review:hover {
+    background-color: #f39c12;
+}
+
+/* Estado ativo do botão de revisão (quando já está marcado) */
+.btn-review.active {
+    background-color: #e67e22; /* Laranja escuro */
+    border: 2px solid #d35400;
+}
+
+/* Ajuste na área de botões de navegação para caber o botão de revisão */
+.nav-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}

@@ -1,8 +1,7 @@
-/* --- DADOS DO USUÁRIO --- */
-let currentUser = {
-    name: "Estudante",
-    cpf: "000.000.000-00"
-};
+
+/* --- BANCO DE DADOS SIMULADO (USUÁRIOS) --- */
+let registeredUsers = []; // Armazena os usuários registrados na sessão
+let currentUser = null;   // Usuário logado no momento
 
 /* --- BANCO DE QUESTÕES --- */
 // Convertendo a lista fornecida para Objetos JS
@@ -341,58 +340,130 @@ const questionsDB = [
     }
 ];
 
-/* --- ESTADO DA APLICAÇÃO --- */
-let userAnswers = {}; 
+/* --- ESTADO DA PROVA --- */
+let userAnswers = {};
+let userReviews = {}; // Armazena quais questões estão marcadas para revisão (true/false)
 let currentQuestionIndex = 0;
-let examTimerInterval = null; 
+let examTimerInterval = null;
 
-/* --- NAVEGAÇÃO GERAL --- */
+/* --- INICIALIZAÇÃO E MÁSCARAS --- */
+window.onload = function () {
+    // Adiciona o evento de máscara aos campos de CPF
+    const loginCpf = document.getElementById('user');
+    const regCpf = document.getElementById('reg-cpf');
+
+    if (loginCpf) loginCpf.addEventListener('input', maskCpfInput);
+    if (regCpf) regCpf.addEventListener('input', maskCpfInput);
+};
+
+/* --- FUNÇÃO DE MÁSCARA DE CPF (000.000.000-00) --- */
+function maskCpfInput(e) {
+    let value = e.target.value;
+
+    // 1. Remove tudo que não é número
+    value = value.replace(/\D/g, "");
+
+    // 2. Limita a 11 caracteres
+    if (value.length > 11) value = value.slice(0, 11);
+
+    // 3. Adiciona a pontuação
+    // Coloca ponto depois do 3º digito
+    value = value.replace(/(\d{3})(\d)/, "$1.$2");
+    // Coloca ponto depois do 6º digito
+    value = value.replace(/(\d{3})(\d)/, "$1.$2");
+    // Coloca traço depois do 9º digito
+    value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+
+    e.target.value = value;
+}
+
+/* --- NAVEGAÇÃO ENTRE TELAS --- */
 function goToScreen(screenId) {
     if (screenId !== 'exam-screen') {
         stopTimer();
     }
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(screenId).classList.add('active');
-    
-    if(screenId === 'exam-screen') {
+
+    if (screenId === 'exam-screen') {
         updateExamHeader();
         initExam();
     }
 }
 
-/* --- LOGIN E CADASTRO --- */
-function handleLogin(event) {
-    event.preventDefault();
-    currentUser.cpf = document.getElementById('user').value;
-    currentUser.name = "Kauan Duarte Flauzino"; 
-    goToScreen('selection-screen');
-}
-
+/* --- SISTEMA DE CADASTRO (REGISTRO) --- */
 function handleRegister(event) {
     event.preventDefault();
-    currentUser.name = document.getElementById('reg-nome').value;
-    currentUser.cpf = document.getElementById('reg-cpf').value;
-    alert('Cadastro realizado com sucesso!');
+    const nome = document.getElementById('reg-nome').value;
+    const cpf = document.getElementById('reg-cpf').value;
+
+    // Validação simples
+    if (cpf.length < 14) { // 14 caracteres = 000.000.000-00
+        alert("Por favor, preencha o CPF completo.");
+        return;
+    }
+
+    // Verifica se já existe
+    const exists = registeredUsers.find(u => u.cpf === cpf);
+    if (exists) {
+        alert("Este CPF já está cadastrado!");
+        return;
+    }
+
+    // Cadastra
+    registeredUsers.push({ name: nome, cpf: cpf });
+    alert('Cadastro realizado com sucesso! Agora faça o login.');
+
+    // Limpa campos e volta pro login
+    document.getElementById('reg-nome').value = '';
+    document.getElementById('reg-cpf').value = '';
+    goToScreen('login-screen');
+}
+
+/* --- SISTEMA DE LOGIN (AUTENTICAÇÃO) --- */
+function handleLogin(event) {
+    event.preventDefault();
+    const cpfInput = document.getElementById('user').value;
+
+    // Procura usuário no "banco"
+    const foundUser = registeredUsers.find(u => u.cpf === cpfInput);
+
+    if (!foundUser) {
+        alert("Usuário não encontrado! Verifique o CPF ou faça o cadastro.");
+        return;
+    }
+
+    // Login com sucesso
+    currentUser = foundUser;
     goToScreen('selection-screen');
 }
 
+/* --- HEADER DA PROVA --- */
 function getCensoredCpf(rawCpf) {
-    const cleanCpf = rawCpf.replace(/\D/g, '');
-    if (cleanCpf.length < 3) return rawCpf;
-    return `${cleanCpf.substring(0, 3)}.***.***-**`;
+    // rawCpf já vem formatado 000.000.000-00, vamos ocultar o meio
+    // Ex: 123.456.789-00 -> 123.***.***-00
+    if (rawCpf.length < 14) return rawCpf;
+    const parts = rawCpf.split('.'); // [123, 456, 789-00]
+    const lastPart = parts[2].split('-'); // [789, 00]
+    return `${parts[0]}.***.***-${lastPart[1]}`;
 }
 
 function updateExamHeader() {
+    if (!currentUser) return;
     const displayCpf = getCensoredCpf(currentUser.cpf);
-    document.getElementById('header-user-data').innerHTML = 
-        `${currentUser.name} (${displayCpf}) | Estudante | <a href="#" onclick="goToScreen('selection-screen')" style="color:#555;">Sair</a>`;
+    document.getElementById('header-user-data').innerHTML =
+        `${currentUser.name} (${displayCpf}) | Estudante | <a href="#" onclick="logout()" style="color:#555;">Sair</a>`;
 }
 
-/* --- LÓGICA DO TIMER --- */
-function startTimer(durationMinutes) {
-    let timer = durationMinutes * 60; 
-    const timerDisplay = document.querySelector('.timer-value');
+function logout() {
+    currentUser = null;
+    goToScreen('login-screen');
+}
 
+/* --- TIMER --- */
+function startTimer(durationMinutes) {
+    let timer = durationMinutes * 60;
+    const timerDisplay = document.querySelector('.timer-value');
     stopTimer();
 
     examTimerInterval = setInterval(function () {
@@ -408,8 +479,8 @@ function startTimer(durationMinutes) {
 
         if (--timer < 0) {
             stopTimer();
-            alert("O tempo da prova acabou! Suas respostas serão enviadas.");
-            finishExam(true);
+            alert("O tempo da prova acabou! Suas respostas serão enviadas automaticamente.");
+            finishExam(true); // Força o envio mesmo com questões em branco
         }
     }, 1000);
 }
@@ -424,46 +495,38 @@ function stopTimer() {
 /* --- LÓGICA DA PROVA --- */
 function initExam() {
     currentQuestionIndex = 0;
-    userAnswers = {}; 
+    userAnswers = {};
+    userReviews = {}; // Reseta revisões
     renderSidebar();
     loadQuestion(0);
-    startTimer(120); // 2 horas de prova
+    startTimer(120);
 }
 
 function loadQuestion(index) {
-    if(index < 0 || index >= questionsDB.length) return;
-    
+    if (index < 0 || index >= questionsDB.length) return;
     currentQuestionIndex = index;
     const q = questionsDB[index];
 
-    // Atualiza Títulos
+    // Texto
     document.getElementById('q-title-bar').innerText = q.title;
     document.getElementById('q-enunciado-text').innerText = q.text;
 
-    // Atualiza Imagem (substituindo a área de código)
+    // Imagem/Código
     const codeContainer = document.getElementById('q-code-area');
-    
-    // Se tiver imagem, exibe
     if (q.image && q.image.trim() !== "") {
         codeContainer.style.display = 'block';
-        codeContainer.className = 'q-image-container'; // Muda a classe CSS para estilo de imagem
+        codeContainer.className = 'q-image-container';
         codeContainer.innerHTML = `<img src="${q.image}" alt="Imagem da Questão" class="q-image" onerror="this.style.display='none'; this.parentElement.innerHTML='(Imagem não carregada. Verifique conexão)'">`;
-    } 
-    // Se tiver código (legado) ou nada, esconde
-    else if (q.code) {
-         codeContainer.style.display = 'block';
-         codeContainer.className = 'code-container';
-         codeContainer.innerHTML = q.code;
     } else {
         codeContainer.style.display = 'none';
         codeContainer.innerHTML = '';
     }
 
-    // Renderiza as 5 Opções
+    // Opções
     const letters = ['a', 'b', 'c', 'd', 'e'];
     const optionsHTML = q.options.map((opt, i) => {
         const isChecked = userAnswers[index] === i ? 'checked' : '';
-        const letter = letters[i] || '?';
+        const letter = letters[i];
         return `
             <label class="option-row" onclick="selectAnswer(${index}, ${i})">
                 <input type="radio" name="q_current" ${isChecked}>
@@ -472,16 +535,51 @@ function loadQuestion(index) {
             </label>
         `;
     }).join('');
-    
     document.getElementById('options-area').innerHTML = optionsHTML;
+
+    // Botão de Revisão (Inserido dinamicamente nos botões de baixo)
+    updateFooterButtons();
     updateSidebarActive();
+}
+
+function updateFooterButtons() {
+    // Localiza a área de botões
+    const navDiv = document.querySelector('.nav-buttons');
+
+    // Remove botão de revisão antigo se existir
+    const oldBtn = document.getElementById('btn-review-toggle');
+    if (oldBtn) oldBtn.remove();
+
+    // Cria novo botão
+    const isReviewed = userReviews[currentQuestionIndex] === true;
+    const btnReview = document.createElement('button');
+    btnReview.id = 'btn-review-toggle';
+    btnReview.className = isReviewed ? 'btn btn-review active' : 'btn btn-review';
+    btnReview.innerText = isReviewed ? 'Desmarcar Revisão' : 'Marcar para Revisão';
+    btnReview.onclick = toggleReview;
+
+    // Insere antes do botão "Anterior" ou no começo
+    navDiv.insertBefore(btnReview, navDiv.firstChild);
+}
+
+function toggleReview() {
+    // Inverte o estado
+    if (userReviews[currentQuestionIndex]) {
+        delete userReviews[currentQuestionIndex];
+    } else {
+        userReviews[currentQuestionIndex] = true;
+    }
+    // Atualiza UI
+    updateFooterButtons();
+    renderSidebar();
 }
 
 function selectAnswer(qIndex, optIndex) {
     userAnswers[qIndex] = optIndex;
+    // Se respondeu, atualiza o input visualmente
     const inputs = document.querySelectorAll('input[name="q_current"]');
-    if(inputs[optIndex]) inputs[optIndex].checked = true;
-    renderSidebar(); 
+    if (inputs[optIndex]) inputs[optIndex].checked = true;
+    renderSidebar();
 }
 
 function nextQuestion() {
@@ -492,14 +590,20 @@ function prevQuestion() {
     if (currentQuestionIndex > 0) loadQuestion(currentQuestionIndex - 1);
 }
 
+/* --- SIDEBAR --- */
 function renderSidebar() {
     const grid = document.getElementById('qGrid');
     grid.innerHTML = '';
+
     questionsDB.forEach((q, i) => {
         const div = document.createElement('div');
         div.classList.add('q-circle');
         div.innerText = i + 1;
+
+        // Classes de estado
         if (userAnswers[i] !== undefined) div.classList.add('answered');
+        if (userReviews[i] === true) div.classList.add('review'); // Nova classe CSS
+
         div.onclick = () => loadQuestion(i);
         grid.appendChild(div);
     });
@@ -513,14 +617,37 @@ function updateSidebarActive() {
     });
 }
 
-/* --- FINALIZAÇÃO --- */
+/* --- FINALIZAÇÃO E VALIDAÇÃO --- */
 function finishExam(forceFinish = false) {
+
+    // Se forçar (tempo acabou), não valida nada, só envia.
     if (!forceFinish) {
-        if(!confirm("Tem certeza que deseja finalizar a prova?")) return;
+
+        // 1. Verifica questões em branco
+        const totalQuestions = questionsDB.length;
+        const answeredCount = Object.keys(userAnswers).length;
+
+        if (answeredCount < totalQuestions) {
+            alert(`Você não pode finalizar!\n\nAinda existem questões sem responder.\nRespondidas: ${answeredCount}/${totalQuestions}`);
+            return; // Bloqueia
+        }
+
+        // 2. Verifica questões em revisão
+        const reviewCount = Object.keys(userReviews).length;
+        if (reviewCount > 0) {
+            // Pega os números das questões em revisão para mostrar
+            const reviewNumbers = Object.keys(userReviews).map(idx => parseInt(idx) + 1).join(', ');
+            alert(`Você não pode finalizar!\n\nVocê tem questões marcadas para revisão: ${reviewNumbers}.\nDesmarque a revisão antes de enviar.`);
+            return; // Bloqueia
+        }
+
+        // 3. Confirmação final
+        if (!confirm("Tem certeza que deseja finalizar a prova?")) return;
     }
 
     stopTimer();
 
+    // Calcula resultados
     const total = questionsDB.length;
     let correctCount = 0;
     let resultsHTML = '';
@@ -528,15 +655,13 @@ function finishExam(forceFinish = false) {
     questionsDB.forEach((q, index) => {
         const userAnswer = userAnswers[index];
         const isCorrect = userAnswer === q.correct;
-        
+
         if (isCorrect) correctCount++;
 
         const statusClass = isCorrect ? 'correct' : 'wrong';
         const badgeClass = isCorrect ? 'bg-green' : 'bg-red';
         const badgeText = isCorrect ? 'Correta' : 'Incorreta';
         const userText = userAnswer !== undefined ? q.options[userAnswer] : "Não respondida";
-
-        // Pega a letra da resposta correta
         const letters = ['A', 'B', 'C', 'D', 'E'];
         const correctLetter = letters[q.correct];
 
